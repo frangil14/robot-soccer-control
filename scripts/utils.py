@@ -24,7 +24,11 @@ def ball_player_min_distance(data, ball_position):
 
     return [np_distances.argmin(), np_distances.min()]
 
-def get_angle_player_ball(player_position, ball_position, distance, initial_angle):
-    # return (ball_position['y']-player_position['y'])/distance
-    angle = asin((ball_position['y']-player_position['y'])/distance)
+# creo que esta funcion esta mal
+def get_angle_player_object(player_position, object_position, distance, initial_angle):
+    angle = asin((object_position['y']-player_position['y'])/distance)
     return angle - initial_angle
+
+def get_player_rivalGoal_distance(player_position, rivalGoal_position):
+    return dist(player_position, rivalGoal_position)
+
