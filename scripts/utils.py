@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from math import sqrt, asin
+from math import sqrt, asin, atan2
 import numpy as np
 
 dist = lambda a,b: sqrt((a['x']-b['x'])**2+(a['y']-b['y'])**2)
@@ -24,9 +24,11 @@ def ball_player_min_distance(data, ball_position):
 
     return [np_distances.argmin(), np_distances.min()]
 
-# creo que esta funcion esta mal
-def get_angle_player_object(player_position, object_position, distance, initial_angle):
-    angle = asin((object_position['y']-player_position['y'])/distance)
+
+def get_angle_player_object(player_position, object_position, initial_angle):
+
+    angle = atan2(object_position['y']-player_position['y'], object_position['x']-player_position['x'])
+
     return angle - initial_angle
 
 def get_player_rivalGoal_distance(player_position, rivalGoal_position):

@@ -3,7 +3,7 @@ import rospy
 from std_msgs.msg import String
 from krssg_ssl_msgs.msg import SSL_DetectionFrame
 from grsim_ros_bridge_msgs.msg import SSL
-from utils import ball_player_min_distance, get_angle_player_object, get_player_rivalGoal_distance
+from utils import ball_player_min_distance, get_angle_player_object
 from player import Player
 
 # we are the blue team
@@ -26,7 +26,7 @@ rival_stricker = Player('yellow')
 ball_position = {'x':0, 'y':0}
 
 # rival goal
-RIVAL_GOAL = {'x':2, 'y':0}
+RIVAL_GOAL = {'x':2000, 'y':-62}
 
 
 def callback(data):
@@ -142,15 +142,15 @@ if __name__ == '__main__':
 
         player_to_action = players[ball_player_min_distance(data, ball_position)[0]]
         player_to_action.activate_player()
-        angle_torotate_toget_ball = get_angle_player_object(player_to_action.get_position(), ball_position, distance_player_ball, player_to_action.get_angle())
+        angle_torotate_toget_ball = get_angle_player_object(player_to_action.get_position(), ball_position, player_to_action.get_angle())
 
-        distance_player_rivalGoal = get_player_rivalGoal_distance(player_to_action.get_position(), RIVAL_GOAL)
-        angle_torotate_rival_goal = get_angle_player_object(player_to_action.get_position(), RIVAL_GOAL, distance_player_rivalGoal, player_to_action.get_angle())
+        angle_torotate_rival_goal = get_angle_player_object(player_to_action.get_position(), RIVAL_GOAL, player_to_action.get_angle())
         rospy.loginfo('angle_torotate_toget_ball ' + str(angle_torotate_toget_ball))
         rospy.loginfo('distance with the ball ' + str(distance_player_ball))
         rospy.loginfo('angle_torotate_rival_goal ' + str(angle_torotate_rival_goal))
         rospy.loginfo('active player ' + str(index_player))
         rospy.loginfo('has the ball ' + str(player_to_action.has_the_ball()))
+        rospy.loginfo('ball position ' + str(ball_position))
         
 
         if not player_to_action.has_the_ball():
