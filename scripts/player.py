@@ -1,7 +1,25 @@
 from grsim_ros_bridge_msgs.msg import SSL
 
+# constants
+
+LATERAL_RIGHT_ACTION_AREA_X_MIN = -2000
+LATERAL_RIGHT_ACTION_AREA_X_MAX = 1000
+LATERAL_RIGHT_ACTION_AREA_Y_MAX = -1000
+LATERAL_RIGHT_ACTION_AREA_Y_MIN = -2000
+
+LATERAL_LEFT_ACTION_AREA_X_MIN = -2000
+LATERAL_LEFT_ACTION_AREA_X_MAX = 1000
+LATERAL_LEFT_ACTION_AREA_Y_MAX = 2000
+LATERAL_LEFT_ACTION_AREA_Y_MIN = 1000
+
+CENTRAL_DEFENDER_ACTION_AREA_X_MIN = -2000
+CENTRAL_DEFENDER_ACTION_AREA_X_MAX = -500
+CENTRAL_DEFENDER_ACTION_AREA_Y_MAX = 1000
+CENTRAL_DEFENDER_ACTION_AREA_Y_MIN = -1000
+
 class Player:
-    def __init__(self, team):
+    def __init__(self, team, role):
+        self.role = role
         self.team = team
         self.position = {'x':0, 'y':0}
         self.angle = 0
@@ -108,3 +126,32 @@ class Player:
 
     def is_active(self):
         return self.active
+
+    def get_role(self):
+        return self.role
+
+    def get_team(self):
+        return self.team
+
+    def ball_is_in_area(self, ball_coordenates):
+        if (self.role == 'lateral_right'):
+            if (ball_coordenates['x'] >= LATERAL_RIGHT_ACTION_AREA_X_MIN and ball_coordenates['x'] <= LATERAL_RIGHT_ACTION_AREA_X_MAX and
+            ball_coordenates['y'] >= LATERAL_RIGHT_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= LATERAL_RIGHT_ACTION_AREA_Y_MAX):
+                return True
+            else:
+                return False
+        elif (self.role == 'lateral_left'):
+            if (ball_coordenates['x'] >= LATERAL_LEFT_ACTION_AREA_X_MIN and ball_coordenates['x'] <= LATERAL_LEFT_ACTION_AREA_X_MAX and
+            ball_coordenates['y'] >= LATERAL_LEFT_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= LATERAL_LEFT_ACTION_AREA_Y_MAX):
+                return True
+            else:
+                return False
+        elif (self.role == 'central_defender'):
+            if (ball_coordenates['x'] >= CENTRAL_DEFENDER_ACTION_AREA_X_MIN and ball_coordenates['x'] <= CENTRAL_DEFENDER_ACTION_AREA_X_MAX and
+            ball_coordenates['y'] >= CENTRAL_DEFENDER_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= CENTRAL_DEFENDER_ACTION_AREA_Y_MAX):
+                return True
+            else:
+                return False
+                
+        else:
+            return True

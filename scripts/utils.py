@@ -15,14 +15,34 @@ def calculate_distance_matrix(data):
 
     return dist_matrix
 
-def ball_player_min_distance(data, ball_position):
-    n = len(data)
+def ball_player_min_distance(our_players, ball_position):
+
+    n = len(our_players)
     distances = []
     for i in range(n):
-        distances.append(dist(data[i],ball_position))
+        distances.append(dist(our_players[i],ball_position))
     np_distances = np.array(distances)
 
     return [np_distances.argmin(), np_distances.min()]
+
+def they_have_the_ball(all_players, ball_position, gap_player_ball):
+
+    n = len(all_players)
+    distances = []
+    for i in range(n):
+        distances.append(dist(all_players[i].get_position(),ball_position))
+    np_distances = np.array(distances)
+
+    distance = np_distances.min()
+
+    closer_player = all_players[np_distances.argmin()]
+
+    if closer_player.get_team() != 'blue':
+        if distance <= gap_player_ball:
+            return True
+
+    return False
+
 
 
 def get_angle_player_object(player_position, object_position, initial_angle):
@@ -31,6 +51,20 @@ def get_angle_player_object(player_position, object_position, initial_angle):
 
     return angle - initial_angle
 
-def get_player_rivalGoal_distance(player_position, rivalGoal_position):
-    return dist(player_position, rivalGoal_position)
+def get_distance_player_object(player_position, object_position):
+    return dist(player_position, object_position)
 
+def get_active_player(players, ball_position):
+
+    our_players_positions = [item.get_position() for item in players]
+    index_player, distance_player_ball = ball_player_min_distance(our_players_positions, ball_position)
+
+    closer_player = players[index_player]
+
+    if closer_player.ball_is_in_area(ball_position):
+        # si la pelota esta en Area del player mas cercano, se activa
+        return [closer_player, distance_player_ball]
+    else:
+        # sino, sigo con el siguiente jugador mas cercano
+        del players[index_player]
+        return get_active_player(players, ball_position)
