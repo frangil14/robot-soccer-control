@@ -5,16 +5,25 @@ import numpy as np
 
 dist = lambda a,b: sqrt((a['x']-b['x'])**2+(a['y']-b['y'])**2)
 
-def get_closer_rival(rival_players, our_player_position):
-# retorna cual es el rival mas cercano a nuestro player
+def get_closer_player(all_players, our_player, isRival = False):
+# retorna cual es el jugador mas cercano a nuestro player
 
-    n = len(rival_players)
+    if isRival:
+        players = [item for item in all_players if item.get_team() == 'yellow']
+    else:
+        players = [item for item in all_players if (item.get_team() == 'blue' and item.get_role() != our_player.get_role())]
+
+    n = len(players)
     distances = []
     for i in range(n):
-        distances.append(dist(rival_players[i],our_player_position))
+        distances.append(dist(players[i].get_position(),our_player.get_position()))
     np_distances = np.array(distances)
 
-    return [np_distances.argmin(), np_distances.min()]
+    index = np_distances.argmin()
+    closer_player = players[index]
+    distance = np_distances.min()
+
+    return [closer_player, distance]
 
 
 def calculate_distance_matrix(data):

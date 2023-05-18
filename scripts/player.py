@@ -1,40 +1,5 @@
 from grsim_ros_bridge_msgs.msg import SSL
-
-# constants
-
-FIELD_X_MIN = -2000
-FIELD_X_MAX = 2000
-FIELD_Y_MIN = -2000
-FIELD_Y_MAX = 2000
-GOAL_Y_MIN = -500
-GOAL_Y_MAX = 500
-CENTRAL_CIRCLE_RADIUS = 500
-SMALL_AREA_X_MAX = -1000
-SMALL_AREA_Y_MIN = -1000
-SMALL_AREA_Y_MAX = 1000
-
-
-
-LATERAL_RIGHT_ACTION_AREA_X_MIN = FIELD_X_MIN
-LATERAL_RIGHT_ACTION_AREA_X_MAX = FIELD_X_MAX
-LATERAL_RIGHT_ACTION_AREA_Y_MIN = FIELD_Y_MIN
-LATERAL_RIGHT_ACTION_AREA_Y_MAX = GOAL_Y_MIN
-
-LATERAL_LEFT_ACTION_AREA_X_MIN = FIELD_X_MIN
-LATERAL_LEFT_ACTION_AREA_X_MAX = FIELD_X_MAX
-LATERAL_LEFT_ACTION_AREA_Y_MIN = GOAL_Y_MAX
-LATERAL_LEFT_ACTION_AREA_Y_MAX = FIELD_Y_MAX
-
-CENTRAL_DEFENDER_ACTION_AREA_X_MIN = FIELD_X_MIN
-CENTRAL_DEFENDER_ACTION_AREA_X_MAX = CENTRAL_CIRCLE_RADIUS
-CENTRAL_DEFENDER_ACTION_AREA_Y_MIN = SMALL_AREA_Y_MIN + (FIELD_Y_MIN - SMALL_AREA_Y_MIN)/2
-CENTRAL_DEFENDER_ACTION_AREA_Y_MAX = SMALL_AREA_Y_MAX + (FIELD_Y_MAX - SMALL_AREA_Y_MAX)/2
-
-GOALKEEPER_ACTION_AREA_X_MIN = FIELD_X_MIN
-GOALKEEPER_ACTION_AREA_X_MAX = SMALL_AREA_X_MAX
-GOALKEEPER_ACTION_AREA_Y_MIN = SMALL_AREA_Y_MIN
-GOALKEEPER_ACTION_AREA_Y_MAX = SMALL_AREA_Y_MAX
-
+from config import LATERAL_LEFT_ACTION_AREA_X_MAX, LATERAL_LEFT_ACTION_AREA_X_MIN, LATERAL_LEFT_ACTION_AREA_Y_MAX, LATERAL_LEFT_ACTION_AREA_Y_MIN, LATERAL_RIGHT_ACTION_AREA_X_MAX, LATERAL_RIGHT_ACTION_AREA_X_MIN, LATERAL_RIGHT_ACTION_AREA_Y_MAX, LATERAL_RIGHT_ACTION_AREA_Y_MIN, CENTRAL_DEFENDER_ACTION_AREA_X_MAX, CENTRAL_DEFENDER_ACTION_AREA_X_MIN, CENTRAL_DEFENDER_ACTION_AREA_Y_MAX, CENTRAL_DEFENDER_ACTION_AREA_Y_MIN, GOALKEEPER_ACTION_AREA_X_MAX, GOALKEEPER_ACTION_AREA_X_MIN, GOALKEEPER_ACTION_AREA_Y_MAX, GOALKEEPER_ACTION_AREA_Y_MIN
 
 class Player:
     def __init__(self, team, role):
@@ -46,6 +11,7 @@ class Player:
         self.msg = SSL()
         self.ball_possession = False
         self.active = False
+        self.go_goal = True
 
     def rotate_right(self, velocity):
         if self.publisher is not None:
@@ -125,6 +91,15 @@ class Player:
     def lost_the_ball(self):
         self.ball_possession = False
 
+    def pass_to_partner(self):
+        self.go_goal = False
+
+    def go_to_goal(self):
+        self.go_goal = True
+
+    def going_goal(self):
+        return self.go_goal
+
     def has_the_ball(self):
         return self.ball_possession
 
@@ -166,26 +141,26 @@ class Player:
     def get_team(self):
         return self.team
 
-    def ball_is_in_area(self, ball_coordenates):
+    def ball_is_in_area(self, ball_coordenates, gap = 0):
         if (self.role == 'lateral_right'):
-            if (ball_coordenates['x'] >= LATERAL_RIGHT_ACTION_AREA_X_MIN and ball_coordenates['x'] <= LATERAL_RIGHT_ACTION_AREA_X_MAX and
-            ball_coordenates['y'] >= LATERAL_RIGHT_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= LATERAL_RIGHT_ACTION_AREA_Y_MAX):
+            if (ball_coordenates['x'] >= LATERAL_RIGHT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= LATERAL_RIGHT_ACTION_AREA_X_MAX + gap and
+            ball_coordenates['y'] >= LATERAL_RIGHT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= LATERAL_RIGHT_ACTION_AREA_Y_MAX + gap):
                 return True
             else:
                 return False
         elif (self.role == 'lateral_left'):
-            if (ball_coordenates['x'] >= LATERAL_LEFT_ACTION_AREA_X_MIN and ball_coordenates['x'] <= LATERAL_LEFT_ACTION_AREA_X_MAX and
-            ball_coordenates['y'] >= LATERAL_LEFT_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= LATERAL_LEFT_ACTION_AREA_Y_MAX):
+            if (ball_coordenates['x'] >= LATERAL_LEFT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= LATERAL_LEFT_ACTION_AREA_X_MAX + gap and
+            ball_coordenates['y'] >= LATERAL_LEFT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= LATERAL_LEFT_ACTION_AREA_Y_MAX + gap):
                 return True
             else:
                 return False
         elif (self.role == 'central_defender'):
-            if (ball_coordenates['x'] >= CENTRAL_DEFENDER_ACTION_AREA_X_MIN and ball_coordenates['x'] <= CENTRAL_DEFENDER_ACTION_AREA_X_MAX and
-            ball_coordenates['y'] >= CENTRAL_DEFENDER_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= CENTRAL_DEFENDER_ACTION_AREA_Y_MAX):
+            if (ball_coordenates['x'] >= CENTRAL_DEFENDER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= CENTRAL_DEFENDER_ACTION_AREA_X_MAX + gap and
+            ball_coordenates['y'] >= CENTRAL_DEFENDER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= CENTRAL_DEFENDER_ACTION_AREA_Y_MAX + gap):
                 return True
         elif (self.role == 'goalkeeper'):
-            if (ball_coordenates['x'] >= GOALKEEPER_ACTION_AREA_X_MIN and ball_coordenates['x'] <= GOALKEEPER_ACTION_AREA_X_MAX and
-            ball_coordenates['y'] >= GOALKEEPER_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= GOALKEEPER_ACTION_AREA_Y_MAX):
+            if (ball_coordenates['x'] >= GOALKEEPER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= GOALKEEPER_ACTION_AREA_X_MAX + gap and
+            ball_coordenates['y'] >= GOALKEEPER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= GOALKEEPER_ACTION_AREA_Y_MAX + gap):
                 return True
             else:
                 return False
