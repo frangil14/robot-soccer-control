@@ -29,6 +29,11 @@ ball_position = {'x':0, 'y':0}
 # rival goal
 RIVAL_GOAL = {'x':2000, 'y':-62}
 
+RIVAL_ACTION_AREA_X_MIN = 1000
+RIVAL_ACTION_AREA_X_MAX = 2000
+RIVAL_ACTION_AREA_Y_MAX = 1000
+RIVAL_ACTION_AREA_Y_MIN = -1000
+
 all_players = [our_lateral_left, our_central_defender, our_lateral_right, our_stricker, our_goalkeeper,
 rival_lateral_left, rival_central_defender, rival_lateral_right, rival_stricker, rival_goalkeeper]
 
@@ -140,6 +145,7 @@ if __name__ == '__main__':
 
         for item in players:
             if not item.is_active():
+                # esto lo podemos mejorar, y podemos hacer que los jugadores No activos vayan a una posicion base, dependiendo si estamos atacando o defendiendo
                 item.stop_go()
                 item.stop_rotate()
 
@@ -163,11 +169,14 @@ if __name__ == '__main__':
         rospy.loginfo('active player role ' + str(player_to_action.get_role()))
         rospy.loginfo('has the ball ' + str(player_to_action.has_the_ball()))
         rospy.loginfo('ball position ' + str(ball_position))
-        rospy.loginfo('they have the ball ' + str(they_have_the_ball(all_players, ball_position, 110)))
+        rospy.loginfo('they have the ball ' + str(they_have_the_ball(all_players, ball_position, 130)))
         
+
+        # aca empieza la logica para activar los jugadores
 
         if they_have_the_ball(all_players, ball_position, 110):
             # ver que hacemos aca, tenemos que defender
+            # por lo pronto hagamos que vayan a una posicion base definida
             pass
 
         else:
@@ -187,6 +196,7 @@ if __name__ == '__main__':
                         player_to_action.start_dribbling()
                     else:
                         # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
+                        # aca tenemos que chequear que no nos choquemos con un rival
                         player_to_action.go_forward(0.1)
 
                 elif angle_torotate_toget_ball>0:
@@ -197,6 +207,8 @@ if __name__ == '__main__':
             else:
                 # tengo la pelota
                 # tengo que acomodarme para mirar al arco
+
+                # podemos chequear si se acerca al limite de su area, y dar un pase
 
                 if angle_torotate_rival_goal < 0.03 and angle_torotate_rival_goal > -0.03:
                     # estoy mirando al arco

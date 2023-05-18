@@ -3,19 +3,25 @@ from grsim_ros_bridge_msgs.msg import SSL
 # constants
 
 LATERAL_RIGHT_ACTION_AREA_X_MIN = -2000
-LATERAL_RIGHT_ACTION_AREA_X_MAX = 1000
-LATERAL_RIGHT_ACTION_AREA_Y_MAX = -1000
+LATERAL_RIGHT_ACTION_AREA_X_MAX = 2000
+LATERAL_RIGHT_ACTION_AREA_Y_MAX = -500
 LATERAL_RIGHT_ACTION_AREA_Y_MIN = -2000
 
 LATERAL_LEFT_ACTION_AREA_X_MIN = -2000
-LATERAL_LEFT_ACTION_AREA_X_MAX = 1000
+LATERAL_LEFT_ACTION_AREA_X_MAX = 2000
 LATERAL_LEFT_ACTION_AREA_Y_MAX = 2000
-LATERAL_LEFT_ACTION_AREA_Y_MIN = 1000
+LATERAL_LEFT_ACTION_AREA_Y_MIN = 500
 
 CENTRAL_DEFENDER_ACTION_AREA_X_MIN = -2000
-CENTRAL_DEFENDER_ACTION_AREA_X_MAX = -500
-CENTRAL_DEFENDER_ACTION_AREA_Y_MAX = 1000
-CENTRAL_DEFENDER_ACTION_AREA_Y_MIN = -1000
+CENTRAL_DEFENDER_ACTION_AREA_X_MAX = 500
+CENTRAL_DEFENDER_ACTION_AREA_Y_MAX = 1500
+CENTRAL_DEFENDER_ACTION_AREA_Y_MIN = -1500
+
+GOALKEEPER_ACTION_AREA_X_MIN = -2000
+GOALKEEPER_ACTION_AREA_X_MAX = -1000
+GOALKEEPER_ACTION_AREA_Y_MAX = 1000
+GOALKEEPER_ACTION_AREA_Y_MIN = -1000
+
 
 class Player:
     def __init__(self, team, role):
@@ -150,8 +156,13 @@ class Player:
             if (ball_coordenates['x'] >= CENTRAL_DEFENDER_ACTION_AREA_X_MIN and ball_coordenates['x'] <= CENTRAL_DEFENDER_ACTION_AREA_X_MAX and
             ball_coordenates['y'] >= CENTRAL_DEFENDER_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= CENTRAL_DEFENDER_ACTION_AREA_Y_MAX):
                 return True
+        elif (self.role == 'goalkeeper'):
+            if (ball_coordenates['x'] >= GOALKEEPER_ACTION_AREA_X_MIN and ball_coordenates['x'] <= GOALKEEPER_ACTION_AREA_X_MAX and
+            ball_coordenates['y'] >= GOALKEEPER_ACTION_AREA_Y_MIN and ball_coordenates['y'] <= GOALKEEPER_ACTION_AREA_Y_MAX):
+                return True
             else:
                 return False
                 
         else:
+            # delantero no tiene limites de accion
             return True
