@@ -3,7 +3,7 @@ import rospy
 from std_msgs.msg import String
 from krssg_ssl_msgs.msg import SSL_DetectionFrame
 from grsim_ros_bridge_msgs.msg import SSL
-from utils import get_angle_player_object, they_have_the_ball, get_active_player, ball_player_min_distance
+from utils import get_angle_player_object, they_have_the_ball, get_active_player, ball_player_min_distance, get_closer_rival
 from player import Player
 
 # we are the blue team
@@ -22,6 +22,8 @@ rival_lateral_right = Player('yellow', 'lateral_right')
 rival_lateral_left = Player('yellow', 'lateral_left')
 rival_stricker = Player('yellow', 'stricker')
 
+rival_players = [rival_lateral_left, rival_central_defender, rival_lateral_right, rival_stricker, rival_goalkeeper]
+
 # ball 
 ball_position = {'x':0, 'y':0}
 
@@ -34,8 +36,7 @@ RIVAL_ACTION_AREA_X_MAX = 2000
 RIVAL_ACTION_AREA_Y_MAX = 1000
 RIVAL_ACTION_AREA_Y_MIN = -1000
 
-all_players = [our_lateral_left, our_central_defender, our_lateral_right, our_stricker, our_goalkeeper,
-rival_lateral_left, rival_central_defender, rival_lateral_right, rival_stricker, rival_goalkeeper]
+all_players = players + rival_players
 
 
 def callback(data):
@@ -158,6 +159,11 @@ if __name__ == '__main__':
         # jugador activo: tiene en cuenta ademas las areas definidas para cada player
         player_to_action, distance_player_ball = get_active_player(players_temp, ball_position)
 
+        # rival mas cercano a nuestro player
+        rival_players_positions = [item.get_position() for item in rival_players]
+        index, distance_player_rival = get_closer_rival(rival_players_positions, player_to_action.get_position())
+        rival_player_closer = rival_players[index]
+
         player_to_action.activate_player()
         angle_torotate_toget_ball = get_angle_player_object(player_to_action.get_position(), ball_position, player_to_action.get_angle())
         angle_torotate_rival_goal = get_angle_player_object(player_to_action.get_position(), RIVAL_GOAL, player_to_action.get_angle())
@@ -170,11 +176,13 @@ if __name__ == '__main__':
         rospy.loginfo('has the ball ' + str(player_to_action.has_the_ball()))
         rospy.loginfo('ball position ' + str(ball_position))
         rospy.loginfo('they have the ball ' + str(they_have_the_ball(all_players, ball_position, 130)))
+        rospy.loginfo('rival player closer ' + str(rival_player_closer.get_role()))
+        rospy.loginfo('distance player rival ' + str(distance_player_rival))
         
 
         # aca empieza la logica para activar los jugadores
 
-        if they_have_the_ball(all_players, ball_position, 110):
+        if they_have_the_ball(all_players, ball_position, 130):
             # ver que hacemos aca, tenemos que defender
             # por lo pronto hagamos que vayan a una posicion base definida
             pass
@@ -187,22 +195,34 @@ if __name__ == '__main__':
                 # se tiene que acomodar para buscar la pelota
 
                 if angle_torotate_toget_ball < 0.03 and angle_torotate_toget_ball > -0.03:
-                    # se puso de frente a la pelota
-                    player_to_action.stop_rotate()  # dejo de rotar
-                    if distance_player_ball < 105:
-                        # si estoy al lado de la pelota
-                        player_to_action.stop_go()
-                        player_to_action.got_the_ball()
-                        player_to_action.start_dribbling()
-                    else:
-                        # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
-                        # aca tenemos que chequear que no nos choquemos con un rival
-                        player_to_action.go_forward(0.1)
+                        # se puso de frente a la pelota
+                        player_to_action.stop_rotate()  # dejo de rotar
+
+                        if distance_player_ball < 105:
+                            # si estoy al lado de la pelota
+                            player_to_action.stop_go()
+                            player_to_action.got_the_ball()
+                            player_to_action.start_dribbling()
+                        else:
+                            # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
+                            # aca tenemos que chequear que no nos choquemos con un rival
+
+                            index, distance_player_rival = get_closer_rival(rival_players_positions, player_to_action.get_position())
+                            rival_player_closer = rival_players[index]
+
+                            if distance_player_rival < 325:
+                                # estoy por chocar al rival
+                                player_to_action.stop_go()
+                                player_to_action.go_sideways(0.1) # trato de esquivarlo
+
+                            else:
+                                player_to_action.stop_go_sideways()
+                                player_to_action.go_forward(0.1)
 
                 elif angle_torotate_toget_ball>0:
-                    player_to_action.rotate_right(0.25)
+                        player_to_action.rotate_right(0.25)
                 else:
-                    player_to_action.rotate_left(0.25)
+                        player_to_action.rotate_left(0.25)
 
             else:
                 # tengo la pelota
@@ -213,9 +233,27 @@ if __name__ == '__main__':
                 if angle_torotate_rival_goal < 0.03 and angle_torotate_rival_goal > -0.03:
                     # estoy mirando al arco
                     player_to_action.stop_rotate()
-                    player_to_action.stop_dribbling()
-                    player_to_action.kick_ball()    # pateo
-                    player_to_action.lost_the_ball()
+                    # aca tenemos que chequear que no nos choquemos con un rival
+
+                    index, distance_player_rival = get_closer_rival(rival_players_positions, player_to_action.get_position())
+                    rival_player_closer = rival_players[index]
+
+                    if distance_player_rival < 325:
+                        # estoy por chocar al rival
+                        player_to_action.stop_go()
+                        player_to_action.go_sideways(0.1) # trato de esquivarlo
+
+                    else:
+                        player_to_action.stop_go_sideways()
+                        player_to_action.go_forward(0.1)
+
+                        if (player_to_action.get_position()['x'] >= RIVAL_ACTION_AREA_X_MIN and player_to_action.get_position()['x'] <= RIVAL_ACTION_AREA_X_MAX and
+                        player_to_action.get_position()['y'] >= RIVAL_ACTION_AREA_Y_MIN and player_to_action.get_position()['y'] <= RIVAL_ACTION_AREA_X_MAX):
+
+                            # estamos dentro del area rival
+                            player_to_action.stop_dribbling()
+                            player_to_action.kick_ball(3.0)    # pateo
+                            player_to_action.lost_the_ball()
                     
                 elif angle_torotate_rival_goal>0:
                     player_to_action.rotate_right(0.25)

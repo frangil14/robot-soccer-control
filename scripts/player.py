@@ -2,25 +2,38 @@ from grsim_ros_bridge_msgs.msg import SSL
 
 # constants
 
-LATERAL_RIGHT_ACTION_AREA_X_MIN = -2000
-LATERAL_RIGHT_ACTION_AREA_X_MAX = 2000
-LATERAL_RIGHT_ACTION_AREA_Y_MAX = -500
-LATERAL_RIGHT_ACTION_AREA_Y_MIN = -2000
+FIELD_X_MIN = -2000
+FIELD_X_MAX = 2000
+FIELD_Y_MIN = -2000
+FIELD_Y_MAX = 2000
+GOAL_Y_MIN = -500
+GOAL_Y_MAX = 500
+CENTRAL_CIRCLE_RADIUS = 500
+SMALL_AREA_X_MAX = -1000
+SMALL_AREA_Y_MIN = -1000
+SMALL_AREA_Y_MAX = 1000
 
-LATERAL_LEFT_ACTION_AREA_X_MIN = -2000
-LATERAL_LEFT_ACTION_AREA_X_MAX = 2000
-LATERAL_LEFT_ACTION_AREA_Y_MAX = 2000
-LATERAL_LEFT_ACTION_AREA_Y_MIN = 500
 
-CENTRAL_DEFENDER_ACTION_AREA_X_MIN = -2000
-CENTRAL_DEFENDER_ACTION_AREA_X_MAX = 500
-CENTRAL_DEFENDER_ACTION_AREA_Y_MAX = 1500
-CENTRAL_DEFENDER_ACTION_AREA_Y_MIN = -1500
 
-GOALKEEPER_ACTION_AREA_X_MIN = -2000
-GOALKEEPER_ACTION_AREA_X_MAX = -1000
-GOALKEEPER_ACTION_AREA_Y_MAX = 1000
-GOALKEEPER_ACTION_AREA_Y_MIN = -1000
+LATERAL_RIGHT_ACTION_AREA_X_MIN = FIELD_X_MIN
+LATERAL_RIGHT_ACTION_AREA_X_MAX = FIELD_X_MAX
+LATERAL_RIGHT_ACTION_AREA_Y_MIN = FIELD_Y_MIN
+LATERAL_RIGHT_ACTION_AREA_Y_MAX = GOAL_Y_MIN
+
+LATERAL_LEFT_ACTION_AREA_X_MIN = FIELD_X_MIN
+LATERAL_LEFT_ACTION_AREA_X_MAX = FIELD_X_MAX
+LATERAL_LEFT_ACTION_AREA_Y_MIN = GOAL_Y_MAX
+LATERAL_LEFT_ACTION_AREA_Y_MAX = FIELD_Y_MAX
+
+CENTRAL_DEFENDER_ACTION_AREA_X_MIN = FIELD_X_MIN
+CENTRAL_DEFENDER_ACTION_AREA_X_MAX = CENTRAL_CIRCLE_RADIUS
+CENTRAL_DEFENDER_ACTION_AREA_Y_MIN = SMALL_AREA_Y_MIN + (FIELD_Y_MIN - SMALL_AREA_Y_MIN)/2
+CENTRAL_DEFENDER_ACTION_AREA_Y_MAX = SMALL_AREA_Y_MAX + (FIELD_Y_MAX - SMALL_AREA_Y_MAX)/2
+
+GOALKEEPER_ACTION_AREA_X_MIN = FIELD_X_MIN
+GOALKEEPER_ACTION_AREA_X_MAX = SMALL_AREA_X_MAX
+GOALKEEPER_ACTION_AREA_Y_MIN = SMALL_AREA_Y_MIN
+GOALKEEPER_ACTION_AREA_Y_MAX = SMALL_AREA_Y_MAX
 
 
 class Player:
@@ -76,6 +89,20 @@ class Player:
         else:
             print('Publisher not configured')
 
+    def go_sideways(self, velocity):
+        if self.publisher is not None:
+            self.msg.cmd_vel.linear.y = velocity
+            self.publisher.publish(self.msg)
+        else:
+            print('Publisher not configured')
+
+    def stop_go_sideways(self):
+        if self.publisher is not None:
+            self.msg.cmd_vel.linear.y = 0
+            self.publisher.publish(self.msg)
+        else:
+            print('Publisher not configured')
+
     def get_position(self):
         return self.position
 
@@ -101,11 +128,11 @@ class Player:
     def has_the_ball(self):
         return self.ball_possession
 
-    def kick_ball(self):
+    def kick_ball(self, power):
         if self.publisher is not None:
-            self.msg.kicker = True
+            self.msg.kicker = power
             self.publisher.publish(self.msg)
-            self.msg.kicker = False
+            self.msg.kicker = 0.0
             self.publisher.publish(self.msg)
         else:
             print('Publisher not configured')

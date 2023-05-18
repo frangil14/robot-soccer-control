@@ -5,7 +5,17 @@ import numpy as np
 
 dist = lambda a,b: sqrt((a['x']-b['x'])**2+(a['y']-b['y'])**2)
 
-# deberiamos hacer una funcion que nos diga cual es el rival (y su posicion) mas cercano a nuestro player
+def get_closer_rival(rival_players, our_player_position):
+# retorna cual es el rival mas cercano a nuestro player
+
+    n = len(rival_players)
+    distances = []
+    for i in range(n):
+        distances.append(dist(rival_players[i],our_player_position))
+    np_distances = np.array(distances)
+
+    return [np_distances.argmin(), np_distances.min()]
+
 
 def calculate_distance_matrix(data):
     n = len(data)
