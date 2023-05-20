@@ -5,14 +5,10 @@ import numpy as np
 
 dist = lambda a,b: sqrt((a['x']-b['x'])**2+(a['y']-b['y'])**2)
 
-def get_closer_player(all_players, our_player, isRival = False):
-# retorna cual es el jugador mas cercano a nuestro player
+def get_closer_player(all_players, our_player):
+    # retorna cual es el jugador mas cercano a nuestro player
 
-    if isRival:
-        players = [item for item in all_players if item.get_team() == 'yellow']
-    else:
-        players = [item for item in all_players if (item.get_team() == 'blue' and item.get_role() != our_player.get_role())]
-
+    players = [item for item in all_players if not (item.get_team() == 'blue' and item.get_role() == our_player.get_role())]
     n = len(players)
     distances = []
     for i in range(n):
@@ -25,16 +21,37 @@ def get_closer_player(all_players, our_player, isRival = False):
 
     return [closer_player, distance]
 
+def get_closer_partner(our_players, our_player):
 
-def calculate_distance_matrix(data):
-    n = len(data)
-    dist_matrix = np.zeros((n,n))
+    players = [item for item in our_players if item.get_role() != our_player.get_role()]
+
+    x_coordenates = [item.get_position()['x'] for item in our_players if item.get_role() != our_player.get_role()]
+    max_x = max(x_coordenates)
+
+    n = len(players)
+    distances = []
     for i in range(n):
-        for j in range(i, n):
-            dist_matrix[i,j] = dist(data[i],data[j])
-            dist_matrix[j,i] = dist_matrix[i,j]
+        distances.append(dist(players[i].get_position(),our_player.get_position()))
+    np_distances = np.array(distances)
 
-    return dist_matrix
+    index = np_distances.argmin()
+    closer_player = players[index]
+    distance = np_distances.min()
+
+    if max_x > our_player.get_position()['x']:
+        # tenemos un jugador mas adelante que nosotros y lo buscamos a el
+
+        if closer_player.get_position()['x'] > our_player.get_position()['x']:
+            # si el jugador mas cercano esta mas adelante, se la damos a el
+            return [closer_player, distance]
+        else:
+            # sino, sigo con el siguiente jugador mas cercano
+            del players[index]
+            return get_closer_partner(players, our_player)
+
+    else:
+        return [closer_player, distance]
+
 
 def ball_player_min_distance(our_players, ball_position):
 
@@ -46,6 +63,7 @@ def ball_player_min_distance(our_players, ball_position):
 
     return [np_distances.argmin(), np_distances.min()]
 
+
 def they_have_the_ball(all_players, ball_position, gap_player_ball):
 
     n = len(all_players)
@@ -55,7 +73,6 @@ def they_have_the_ball(all_players, ball_position, gap_player_ball):
     np_distances = np.array(distances)
 
     distance = np_distances.min()
-
     closer_player = all_players[np_distances.argmin()]
 
     if closer_player.get_team() != 'blue':
@@ -67,9 +84,7 @@ def they_have_the_ball(all_players, ball_position, gap_player_ball):
 
 
 def get_angle_player_object(player_position, object_position, initial_angle):
-
     angle = atan2(object_position['y']-player_position['y'], object_position['x']-player_position['x'])
-
     return angle - initial_angle
 
 def get_distance_player_object(player_position, object_position):

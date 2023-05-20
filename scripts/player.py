@@ -1,5 +1,9 @@
 from grsim_ros_bridge_msgs.msg import SSL
-from config import LATERAL_LEFT_ACTION_AREA_X_MAX, LATERAL_LEFT_ACTION_AREA_X_MIN, LATERAL_LEFT_ACTION_AREA_Y_MAX, LATERAL_LEFT_ACTION_AREA_Y_MIN, LATERAL_RIGHT_ACTION_AREA_X_MAX, LATERAL_RIGHT_ACTION_AREA_X_MIN, LATERAL_RIGHT_ACTION_AREA_Y_MAX, LATERAL_RIGHT_ACTION_AREA_Y_MIN, CENTRAL_DEFENDER_ACTION_AREA_X_MAX, CENTRAL_DEFENDER_ACTION_AREA_X_MIN, CENTRAL_DEFENDER_ACTION_AREA_Y_MAX, CENTRAL_DEFENDER_ACTION_AREA_Y_MIN, GOALKEEPER_ACTION_AREA_X_MAX, GOALKEEPER_ACTION_AREA_X_MIN, GOALKEEPER_ACTION_AREA_Y_MAX, GOALKEEPER_ACTION_AREA_Y_MIN
+from config import LATERAL_LEFT_ACTION_AREA_X_MAX, LATERAL_LEFT_ACTION_AREA_X_MIN, LATERAL_LEFT_ACTION_AREA_Y_MAX, LATERAL_LEFT_ACTION_AREA_Y_MIN, LATERAL_RIGHT_ACTION_AREA_X_MAX, LATERAL_RIGHT_ACTION_AREA_X_MIN, LATERAL_RIGHT_ACTION_AREA_Y_MAX, LATERAL_RIGHT_ACTION_AREA_Y_MIN, CENTRAL_DEFENDER_ACTION_AREA_X_MAX, CENTRAL_DEFENDER_ACTION_AREA_X_MIN, CENTRAL_DEFENDER_ACTION_AREA_Y_MAX, CENTRAL_DEFENDER_ACTION_AREA_Y_MIN, GOALKEEPER_ACTION_AREA_X_MAX, GOALKEEPER_ACTION_AREA_X_MIN, GOALKEEPER_ACTION_AREA_Y_MAX, GOALKEEPER_ACTION_AREA_Y_MIN, LATERAL_RIGHT_DEFENDING_POSITION_X, LATERAL_RIGHT_DEFENDING_POSITION_Y, LATERAL_LEFT_DEFENDING_POSITION_X, LATERAL_LEFT_DEFENDING_POSITION_Y, CENTRAL_DEFENDER_DEFENDING_POSITION_X, CENTRAL_DEFENDER_DEFENDING_POSITION_Y, STRICKER_DEFENDING_POSITION_X, STRICKER_DEFENDING_POSITION_Y, GOALKEEPER_DEFENDING_POSITION_X, GOALKEEPER_DEFENDING_POSITION_Y, LATERAL_RIGHT_ATACKING_POSITION_X, LATERAL_RIGHT_ATACKING_POSITION_Y, LATERAL_LEFT_ATACKING_POSITION_X, LATERAL_LEFT_ATACKING_POSITION_Y, CENTRAL_DEFENDER_ATACKING_POSITION_X, CENTRAL_DEFENDER_ATACKING_POSITION_Y, STRICKER_ATACKING_POSITION_X, STRICKER_ATACKING_POSITION_Y, GOALKEEPER_ATACKING_POSITION_X, GOALKEEPER_ATACKING_POSITION_Y
+from utils import get_angle_player_object, get_closer_player, get_distance_player_object
+
+safe_distance_rival_player = 225
+velocity_sideways = 0.1
 
 class Player:
     def __init__(self, team, role):
@@ -164,7 +168,84 @@ class Player:
                 return True
             else:
                 return False
-                
         else:
             # delantero no tiene limites de accion
             return True
+
+    def go_defend(self, all_players):
+
+        if (self.role == 'lateral_right'):
+            goal = {'x':LATERAL_RIGHT_DEFENDING_POSITION_X, 'y':LATERAL_RIGHT_DEFENDING_POSITION_Y}
+        elif (self.role == 'lateral_left'):
+            goal = {'x':LATERAL_LEFT_DEFENDING_POSITION_X, 'y':LATERAL_LEFT_DEFENDING_POSITION_Y}
+        elif (self.role == 'central_defender'):
+            goal = {'x':CENTRAL_DEFENDER_DEFENDING_POSITION_X, 'y':CENTRAL_DEFENDER_DEFENDING_POSITION_Y}
+        elif (self.role == 'stricker'):
+            goal = {'x':STRICKER_DEFENDING_POSITION_X, 'y':STRICKER_DEFENDING_POSITION_Y}
+        else:
+            goal = {'x':GOALKEEPER_DEFENDING_POSITION_X, 'y':GOALKEEPER_DEFENDING_POSITION_Y}
+
+        angle_to_rotate = get_angle_player_object(self.get_position(), goal, self.get_angle())
+        if angle_to_rotate < 0.03 and angle_to_rotate > -0.03:
+            # estoy mirando 
+            self.stop_rotate()
+            distance = get_distance_player_object(self.get_position(), goal)
+            if distance < 105:
+                # estoy en posicion
+                self.stop_go()
+            else:
+                closer_player, distance_closer_player = get_closer_player(all_players, self)
+
+                if distance_closer_player < safe_distance_rival_player:
+                    # estoy por chocar a otro jugador
+                    self.stop_go()
+                    self.go_sideways(velocity_sideways) # trato de esquivarlo
+
+                else:
+                    self.stop_go_sideways()
+                    self.go_forward(0.4)
+                # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
+
+        elif angle_to_rotate>0:
+            self.rotate_right(0.3)
+        else:
+            self.rotate_left(0.3)
+
+    def go_atack(self, all_players):
+
+        if (self.role == 'lateral_right'):
+            goal = {'x':LATERAL_RIGHT_ATACKING_POSITION_X, 'y':LATERAL_RIGHT_ATACKING_POSITION_Y}
+        elif (self.role == 'lateral_left'):
+            goal = {'x':LATERAL_LEFT_ATACKING_POSITION_X, 'y':LATERAL_LEFT_ATACKING_POSITION_Y}
+        elif (self.role == 'central_defender'):
+            goal = {'x':CENTRAL_DEFENDER_ATACKING_POSITION_X, 'y':CENTRAL_DEFENDER_ATACKING_POSITION_Y}
+        elif (self.role == 'stricker'):
+            goal = {'x':STRICKER_ATACKING_POSITION_X, 'y':STRICKER_ATACKING_POSITION_Y}
+        else:
+            goal = {'x':GOALKEEPER_ATACKING_POSITION_X, 'y':GOALKEEPER_ATACKING_POSITION_Y}
+
+        angle_to_rotate = get_angle_player_object(self.get_position(), goal, self.get_angle())
+        if angle_to_rotate < 0.03 and angle_to_rotate > -0.03:
+            # estoy mirando 
+            self.stop_rotate()
+            distance = get_distance_player_object(self.get_position(), goal)
+            if distance < 105:
+                # estoy en posicion
+                self.stop_go()
+            else:
+                closer_player, distance_closer_player = get_closer_player(all_players, self)
+
+                if distance_closer_player < safe_distance_rival_player:
+                    # estoy por chocar a otro jugador
+                    self.stop_go()
+                    self.go_sideways(velocity_sideways) # trato de esquivarlo
+
+                else:
+                    self.stop_go_sideways()
+                    self.go_forward(0.4)
+                # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
+
+        elif angle_to_rotate>0:
+            self.rotate_right(0.4)
+        else:
+            self.rotate_left(0.4)
