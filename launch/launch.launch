@@ -1,0 +1,7 @@
+<launch>
+  <arg name="mav_name" default="c5"/>
+
+  <node name="blue_players" pkg="my_solution" type="main.py" output="screen"/>
+  <node name="yellow_players" pkg="my_solution" type="main_rivals.py" output="screen"/>
+
+</launch>

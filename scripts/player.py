@@ -1,5 +1,5 @@
 from grsim_ros_bridge_msgs.msg import SSL
-from config import LATERAL_LEFT_ACTION_AREA_X_MAX, LATERAL_LEFT_ACTION_AREA_X_MIN, LATERAL_LEFT_ACTION_AREA_Y_MAX, LATERAL_LEFT_ACTION_AREA_Y_MIN, LATERAL_RIGHT_ACTION_AREA_X_MAX, LATERAL_RIGHT_ACTION_AREA_X_MIN, LATERAL_RIGHT_ACTION_AREA_Y_MAX, LATERAL_RIGHT_ACTION_AREA_Y_MIN, CENTRAL_DEFENDER_ACTION_AREA_X_MAX, CENTRAL_DEFENDER_ACTION_AREA_X_MIN, CENTRAL_DEFENDER_ACTION_AREA_Y_MAX, CENTRAL_DEFENDER_ACTION_AREA_Y_MIN, GOALKEEPER_ACTION_AREA_X_MAX, GOALKEEPER_ACTION_AREA_X_MIN, GOALKEEPER_ACTION_AREA_Y_MAX, GOALKEEPER_ACTION_AREA_Y_MIN, LATERAL_RIGHT_DEFENDING_POSITION_X, LATERAL_RIGHT_DEFENDING_POSITION_Y, LATERAL_LEFT_DEFENDING_POSITION_X, LATERAL_LEFT_DEFENDING_POSITION_Y, CENTRAL_DEFENDER_DEFENDING_POSITION_X, CENTRAL_DEFENDER_DEFENDING_POSITION_Y, STRICKER_DEFENDING_POSITION_X, STRICKER_DEFENDING_POSITION_Y, GOALKEEPER_DEFENDING_POSITION_X, GOALKEEPER_DEFENDING_POSITION_Y, LATERAL_RIGHT_ATACKING_POSITION_X, LATERAL_RIGHT_ATACKING_POSITION_Y, LATERAL_LEFT_ATACKING_POSITION_X, LATERAL_LEFT_ATACKING_POSITION_Y, CENTRAL_DEFENDER_ATACKING_POSITION_X, CENTRAL_DEFENDER_ATACKING_POSITION_Y, STRICKER_ATACKING_POSITION_X, STRICKER_ATACKING_POSITION_Y, GOALKEEPER_ATACKING_POSITION_X, GOALKEEPER_ATACKING_POSITION_Y
+from config import *
 from utils import get_angle_player_object, get_closer_player, get_distance_player_object
 
 safe_distance_rival_player = 225
@@ -18,6 +18,8 @@ class Player:
         self.go_goal = True
 
     def rotate_right(self, velocity):
+        # if self.team == 'yellow':
+        #     velocity = -velocity
         if self.publisher is not None:
             self.msg.cmd_vel.angular.z = velocity
             self.publisher.publish(self.msg)
@@ -25,6 +27,8 @@ class Player:
             print('Publisher not configured')
 
     def rotate_left(self, velocity):
+        # if self.team == 'yellow':
+        #     velocity = -velocity
         if self.publisher is not None:
             self.msg.cmd_vel.angular.z = -velocity
             self.publisher.publish(self.msg)
@@ -146,46 +150,89 @@ class Player:
         return self.team
 
     def ball_is_in_area(self, ball_coordenates, gap = 0):
-        if (self.role == 'lateral_right'):
-            if (ball_coordenates['x'] >= LATERAL_RIGHT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= LATERAL_RIGHT_ACTION_AREA_X_MAX + gap and
-            ball_coordenates['y'] >= LATERAL_RIGHT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= LATERAL_RIGHT_ACTION_AREA_Y_MAX + gap):
-                return True
+        # blue players
+        if (self.team == 'blue'):
+            if (self.role == 'lateral_right'):
+                if (ball_coordenates['x'] >= BLUE_LATERAL_RIGHT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= BLUE_LATERAL_RIGHT_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= BLUE_LATERAL_RIGHT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= BLUE_LATERAL_RIGHT_ACTION_AREA_Y_MAX + gap):
+                    return True
+                else:
+                    return False
+            elif (self.role == 'lateral_left'):
+                if (ball_coordenates['x'] >= BLUE_LATERAL_LEFT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= BLUE_LATERAL_LEFT_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= BLUE_LATERAL_LEFT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= BLUE_LATERAL_LEFT_ACTION_AREA_Y_MAX + gap):
+                    return True
+                else:
+                    return False
+            elif (self.role == 'central_defender'):
+                if (ball_coordenates['x'] >= BLUE_CENTRAL_DEFENDER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= BLUE_CENTRAL_DEFENDER_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= BLUE_CENTRAL_DEFENDER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= BLUE_CENTRAL_DEFENDER_ACTION_AREA_Y_MAX + gap):
+                    return True
+            elif (self.role == 'goalkeeper'):
+                if (ball_coordenates['x'] >= BLUE_GOALKEEPER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= BLUE_GOALKEEPER_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= BLUE_GOALKEEPER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= BLUE_GOALKEEPER_ACTION_AREA_Y_MAX + gap):
+                    return True
+                else:
+                    return False
             else:
-                return False
-        elif (self.role == 'lateral_left'):
-            if (ball_coordenates['x'] >= LATERAL_LEFT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= LATERAL_LEFT_ACTION_AREA_X_MAX + gap and
-            ball_coordenates['y'] >= LATERAL_LEFT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= LATERAL_LEFT_ACTION_AREA_Y_MAX + gap):
+                # delantero no tiene limites de accion
                 return True
-            else:
-                return False
-        elif (self.role == 'central_defender'):
-            if (ball_coordenates['x'] >= CENTRAL_DEFENDER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= CENTRAL_DEFENDER_ACTION_AREA_X_MAX + gap and
-            ball_coordenates['y'] >= CENTRAL_DEFENDER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= CENTRAL_DEFENDER_ACTION_AREA_Y_MAX + gap):
-                return True
-        elif (self.role == 'goalkeeper'):
-            if (ball_coordenates['x'] >= GOALKEEPER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= GOALKEEPER_ACTION_AREA_X_MAX + gap and
-            ball_coordenates['y'] >= GOALKEEPER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= GOALKEEPER_ACTION_AREA_Y_MAX + gap):
-                return True
-            else:
-                return False
         else:
-            # delantero no tiene limites de accion
-            return True
+            # yellow players
+            if (self.role == 'lateral_right'):
+                if (ball_coordenates['x'] >= YELLOW_LATERAL_RIGHT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= YELLOW_LATERAL_RIGHT_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= YELLOW_LATERAL_RIGHT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= YELLOW_LATERAL_RIGHT_ACTION_AREA_Y_MAX + gap):
+                    return True
+                else:
+                    return False
+            elif (self.role == 'lateral_left'):
+                if (ball_coordenates['x'] >= YELLOW_LATERAL_LEFT_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= YELLOW_LATERAL_LEFT_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= YELLOW_LATERAL_LEFT_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= YELLOW_LATERAL_LEFT_ACTION_AREA_Y_MAX + gap):
+                    return True
+                else:
+                    return False
+            elif (self.role == 'central_defender'):
+                if (ball_coordenates['x'] >= YELLOW_CENTRAL_DEFENDER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= YELLOW_CENTRAL_DEFENDER_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= YELLOW_CENTRAL_DEFENDER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= YELLOW_CENTRAL_DEFENDER_ACTION_AREA_Y_MAX + gap):
+                    return True
+            elif (self.role == 'goalkeeper'):
+                if (ball_coordenates['x'] >= YELLOW_GOALKEEPER_ACTION_AREA_X_MIN - gap and ball_coordenates['x'] <= YELLOW_GOALKEEPER_ACTION_AREA_X_MAX + gap and
+                ball_coordenates['y'] >= YELLOW_GOALKEEPER_ACTION_AREA_Y_MIN - gap and ball_coordenates['y'] <= YELLOW_GOALKEEPER_ACTION_AREA_Y_MAX + gap):
+                    return True
+                else:
+                    return False
+            else:
+                # delantero no tiene limites de accion
+                return True
 
     def go_defend(self, all_players):
+        # blue players
+        if (self.team == 'blue'):
+            if (self.role == 'lateral_right'):
+                goal = {'x':BLUE_LATERAL_RIGHT_DEFENDING_POSITION_X, 'y':BLUE_LATERAL_RIGHT_DEFENDING_POSITION_Y}
+            elif (self.role == 'lateral_left'):
+                goal = {'x':BLUE_LATERAL_LEFT_DEFENDING_POSITION_X, 'y':BLUE_LATERAL_LEFT_DEFENDING_POSITION_Y}
+            elif (self.role == 'central_defender'):
+                goal = {'x':BLUE_CENTRAL_DEFENDER_DEFENDING_POSITION_X, 'y':BLUE_CENTRAL_DEFENDER_DEFENDING_POSITION_Y}
+            elif (self.role == 'stricker'):
+                goal = {'x':BLUE_STRICKER_DEFENDING_POSITION_X, 'y':BLUE_STRICKER_DEFENDING_POSITION_Y}
+            else:
+                goal = {'x':BLUE_GOALKEEPER_DEFENDING_POSITION_X, 'y':BLUE_GOALKEEPER_DEFENDING_POSITION_Y}
 
-        if (self.role == 'lateral_right'):
-            goal = {'x':LATERAL_RIGHT_DEFENDING_POSITION_X, 'y':LATERAL_RIGHT_DEFENDING_POSITION_Y}
-        elif (self.role == 'lateral_left'):
-            goal = {'x':LATERAL_LEFT_DEFENDING_POSITION_X, 'y':LATERAL_LEFT_DEFENDING_POSITION_Y}
-        elif (self.role == 'central_defender'):
-            goal = {'x':CENTRAL_DEFENDER_DEFENDING_POSITION_X, 'y':CENTRAL_DEFENDER_DEFENDING_POSITION_Y}
-        elif (self.role == 'stricker'):
-            goal = {'x':STRICKER_DEFENDING_POSITION_X, 'y':STRICKER_DEFENDING_POSITION_Y}
         else:
-            goal = {'x':GOALKEEPER_DEFENDING_POSITION_X, 'y':GOALKEEPER_DEFENDING_POSITION_Y}
+            # yellow players
+            if (self.role == 'lateral_right'):
+                goal = {'x':YELLOW_LATERAL_RIGHT_DEFENDING_POSITION_X, 'y':YELLOW_LATERAL_RIGHT_DEFENDING_POSITION_Y}
+            elif (self.role == 'lateral_left'):
+                goal = {'x':YELLOW_LATERAL_LEFT_DEFENDING_POSITION_X, 'y':YELLOW_LATERAL_LEFT_DEFENDING_POSITION_Y}
+            elif (self.role == 'central_defender'):
+                goal = {'x':YELLOW_CENTRAL_DEFENDER_DEFENDING_POSITION_X, 'y':YELLOW_CENTRAL_DEFENDER_DEFENDING_POSITION_Y}
+            elif (self.role == 'stricker'):
+                goal = {'x':YELLOW_STRICKER_DEFENDING_POSITION_X, 'y':YELLOW_STRICKER_DEFENDING_POSITION_Y}
+            else:
+                goal = {'x':YELLOW_GOALKEEPER_DEFENDING_POSITION_X, 'y':YELLOW_GOALKEEPER_DEFENDING_POSITION_Y}
 
-        angle_to_rotate = get_angle_player_object(self.get_position(), goal, self.get_angle())
+        angle_to_rotate = get_angle_player_object(self, goal, self.get_angle())
         if angle_to_rotate < 0.03 and angle_to_rotate > -0.03:
             # estoy mirando 
             self.stop_rotate()
@@ -212,19 +259,33 @@ class Player:
             self.rotate_left(0.3)
 
     def go_atack(self, all_players):
-
-        if (self.role == 'lateral_right'):
-            goal = {'x':LATERAL_RIGHT_ATACKING_POSITION_X, 'y':LATERAL_RIGHT_ATACKING_POSITION_Y}
-        elif (self.role == 'lateral_left'):
-            goal = {'x':LATERAL_LEFT_ATACKING_POSITION_X, 'y':LATERAL_LEFT_ATACKING_POSITION_Y}
-        elif (self.role == 'central_defender'):
-            goal = {'x':CENTRAL_DEFENDER_ATACKING_POSITION_X, 'y':CENTRAL_DEFENDER_ATACKING_POSITION_Y}
-        elif (self.role == 'stricker'):
-            goal = {'x':STRICKER_ATACKING_POSITION_X, 'y':STRICKER_ATACKING_POSITION_Y}
+        # blue players
+        if (self.team == 'blue'):
+            if (self.role == 'lateral_right'):
+                goal = {'x':BLUE_LATERAL_RIGHT_ATACKING_POSITION_X, 'y':BLUE_LATERAL_RIGHT_ATACKING_POSITION_Y}
+            elif (self.role == 'lateral_left'):
+                goal = {'x':BLUE_LATERAL_LEFT_ATACKING_POSITION_X, 'y':BLUE_LATERAL_LEFT_ATACKING_POSITION_Y}
+            elif (self.role == 'central_defender'):
+                goal = {'x':BLUE_CENTRAL_DEFENDER_ATACKING_POSITION_X, 'y':BLUE_CENTRAL_DEFENDER_ATACKING_POSITION_Y}
+            elif (self.role == 'stricker'):
+                goal = {'x':BLUE_STRICKER_ATACKING_POSITION_X, 'y':BLUE_STRICKER_ATACKING_POSITION_Y}
+            else:
+                goal = {'x':BLUE_GOALKEEPER_ATACKING_POSITION_X, 'y':BLUE_GOALKEEPER_ATACKING_POSITION_Y}
+        
         else:
-            goal = {'x':GOALKEEPER_ATACKING_POSITION_X, 'y':GOALKEEPER_ATACKING_POSITION_Y}
+            # yellow players
+            if (self.role == 'lateral_right'):
+                goal = {'x':YELLOW_LATERAL_RIGHT_ATACKING_POSITION_X, 'y':YELLOW_LATERAL_RIGHT_ATACKING_POSITION_Y}
+            elif (self.role == 'lateral_left'):
+                goal = {'x':YELLOW_LATERAL_LEFT_ATACKING_POSITION_X, 'y':YELLOW_LATERAL_LEFT_ATACKING_POSITION_Y}
+            elif (self.role == 'central_defender'):
+                goal = {'x':YELLOW_CENTRAL_DEFENDER_ATACKING_POSITION_X, 'y':YELLOW_CENTRAL_DEFENDER_ATACKING_POSITION_Y}
+            elif (self.role == 'stricker'):
+                goal = {'x':YELLOW_STRICKER_ATACKING_POSITION_X, 'y':YELLOW_STRICKER_ATACKING_POSITION_Y}
+            else:
+                goal = {'x':YELLOW_GOALKEEPER_ATACKING_POSITION_X, 'y':YELLOW_GOALKEEPER_ATACKING_POSITION_Y}
 
-        angle_to_rotate = get_angle_player_object(self.get_position(), goal, self.get_angle())
+        angle_to_rotate = get_angle_player_object(self, goal, self.get_angle())
         if angle_to_rotate < 0.03 and angle_to_rotate > -0.03:
             # estoy mirando 
             self.stop_rotate()
