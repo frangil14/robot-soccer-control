@@ -128,17 +128,13 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
 
-        for item in players:
-            if not item.is_active():
-                item.stop_go()
-                item.stop_go_sideways()
-                item.stop_rotate()
+        for player in players:
+            if not player.is_active():
+                player.stop_go()
+                player.stop_go_sideways()
+                player.stop_rotate()
 
         players_temp = players.copy()
-
-        # solo para ver: el jugador mas cercano a la pelota
-        our_players_positions = [item.get_position() for item in players]
-        closer_player = players[ball_player_min_distance(our_players_positions, ball_position)[0]]
 
         # jugador activo: tiene en cuenta ademas las areas definidas para cada player
         player_to_action, distance_player_ball = get_active_player(players_temp, ball_position)
@@ -148,19 +144,7 @@ if __name__ == '__main__':
         angle_torotate_toget_ball = get_angle_player_object(player_to_action, ball_position, player_to_action.get_angle())
         angle_torotate_rival_goal = get_angle_player_object(player_to_action, RIVAL_GOAL, player_to_action.get_angle())
 
-        # rospy.loginfo('angle_torotate_toget_ball ' + str(angle_torotate_toget_ball))
-        # rospy.loginfo('distance with the ball ' + str(distance_player_ball))
-        # rospy.loginfo('angle_torotate_rival_goal ' + str(angle_torotate_rival_goal))
-        # rospy.loginfo('OUR closer player ' + str(closer_player.get_role()))
         rospy.loginfo('YELLOW active player ' + str(player_to_action.get_role()))
-        # rospy.loginfo('OUR closer partner ' + str(partner_player.get_role()))
-        # rospy.loginfo('distancia con nuestro companero ' + str(distance_partner_player))
-        # rospy.loginfo('has the ball ' + str(player_to_action.has_the_ball()))
-        # rospy.loginfo('ball position ' + str(ball_position))
-        # rospy.loginfo('they have the ball ' + str(they_have_the_ball(all_players, ball_position, 130, player_to_action.get_team())))
-        # rospy.loginfo('RIVAL closer player ' + str(rival_player_closer.get_role()))
-        # rospy.loginfo('distance player rival ' + str(distance_player_rival))
-        # rospy.loginfo('angle_torotate_partner_player ' + str(angle_torotate_partner_player))
 
         # la primera data que tira la camara esta equivocada
         if angle_torotate_toget_ball == 0 and distance_player_ball == 0 and ball_position['x'] == 0 and ball_position['y'] == 0:
@@ -172,18 +156,16 @@ if __name__ == '__main__':
             if we_have_the_ball(players, distance_player_ball):
                 rospy.loginfo('YELLOW has the ball')
                 for player in players:
-                    if not item.is_active():
-                        player.go_atack(all_players)
+                    if not player.is_active():
+                        player.go_atack(all_players,rospy)
                 # nosotros tenemos la pelota
-                # tengo que acomodarme para mirar al arco
-
-                # podemos chequear si se acerca al limite de su area, y dar un pase
+                # tengo que acomodarme para mirar al arco, o para darle la pelota a mi companero
 
                 if player_to_action.going_goal():
                     # estoy yendo al arco
                     rospy.loginfo('YELLOW esta yendo al arco')
 
-                    locate_target(player_to_action, all_players, angle_torotate_rival_goal, ball_position)
+                    locate_target(rospy,player_to_action, all_players, angle_torotate_rival_goal, ball_position)
                 
                 else:
                     # no estoy yendo al arco, estoy buscando a mi companero
@@ -191,18 +173,15 @@ if __name__ == '__main__':
                     partner_player, distance_partner_player = get_closer_partner(players, player_to_action)
 
                     angle_torotate_partner_player = get_angle_player_object(player_to_action, partner_player.get_position(), player_to_action.get_angle())
-                    locate_target(player_to_action, all_players, angle_torotate_partner_player, None, distance_partner_player, None, 'partner')
+                    locate_target(rospy,player_to_action, all_players, angle_torotate_partner_player, None, distance_partner_player, 'partner')
+
             elif they_have_the_ball(all_players, ball_position, 130, player_to_action.get_team()):
-                # rospy.loginfo('BLUE has the ball')
                 for player in players:
-                    player.go_defend(all_players)
+                    player.go_defend(all_players,rospy)
 
             else:
                 rospy.loginfo('la pelota esta libre')
-                # la pelota esta libre
-                # se tiene que acomodar para buscar la pelota
-
-                locate_target(player_to_action, all_players, angle_torotate_toget_ball, None, None,distance_player_ball, 'ball')
+                locate_target(rospy,player_to_action, all_players, angle_torotate_toget_ball, None, distance_player_ball, 'ball')
 
 
 

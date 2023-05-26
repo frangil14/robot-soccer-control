@@ -1,6 +1,7 @@
 from grsim_ros_bridge_msgs.msg import SSL
 from config import *
 from utils import get_angle_player_object, get_closer_player, get_distance_player_object
+from actions import locate_target
 
 safe_distance_rival_player = 225
 velocity_sideways = 0.1
@@ -205,7 +206,7 @@ class Player:
                 # delantero no tiene limites de accion
                 return True
 
-    def go_defend(self, all_players):
+    def go_defend(self, all_players, rospy):
         # blue players
         if (self.team == 'blue'):
             if (self.role == 'lateral_right'):
@@ -232,33 +233,12 @@ class Player:
             else:
                 goal = {'x':YELLOW_GOALKEEPER_DEFENDING_POSITION_X, 'y':YELLOW_GOALKEEPER_DEFENDING_POSITION_Y}
 
-        angle_to_rotate = get_angle_player_object(self, goal, self.get_angle())
-        if angle_to_rotate < 0.03 and angle_to_rotate > -0.03:
-            # estoy mirando 
-            self.stop_rotate()
-            distance = get_distance_player_object(self.get_position(), goal)
-            if distance < 105:
-                # estoy en posicion
-                self.stop_go()
-            else:
-                closer_player, distance_closer_player = get_closer_player(all_players, self)
+        angle_to_rotate = get_angle_player_object(self, goal, self.angle)
+        distance = get_distance_player_object(self.position, goal)
+        locate_target(rospy, self, all_players, angle_to_rotate, None, distance, 'point')
 
-                if distance_closer_player < safe_distance_rival_player:
-                    # estoy por chocar a otro jugador
-                    self.stop_go()
-                    self.go_sideways(velocity_sideways) # trato de esquivarlo
 
-                else:
-                    self.stop_go_sideways()
-                    self.go_forward(0.4)
-                # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
-
-        elif angle_to_rotate>0:
-            self.rotate_right(0.3)
-        else:
-            self.rotate_left(0.3)
-
-    def go_atack(self, all_players):
+    def go_atack(self, all_players,rospy):
         # blue players
         if (self.team == 'blue'):
             if (self.role == 'lateral_right'):
@@ -285,28 +265,6 @@ class Player:
             else:
                 goal = {'x':YELLOW_GOALKEEPER_ATACKING_POSITION_X, 'y':YELLOW_GOALKEEPER_ATACKING_POSITION_Y}
 
-        angle_to_rotate = get_angle_player_object(self, goal, self.get_angle())
-        if angle_to_rotate < 0.03 and angle_to_rotate > -0.03:
-            # estoy mirando 
-            self.stop_rotate()
-            distance = get_distance_player_object(self.get_position(), goal)
-            if distance < 105:
-                # estoy en posicion
-                self.stop_go()
-            else:
-                closer_player, distance_closer_player = get_closer_player(all_players, self)
-
-                if distance_closer_player < safe_distance_rival_player:
-                    # estoy por chocar a otro jugador
-                    self.stop_go()
-                    self.go_sideways(velocity_sideways) # trato de esquivarlo
-
-                else:
-                    self.stop_go_sideways()
-                    self.go_forward(0.4)
-                # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
-
-        elif angle_to_rotate>0:
-            self.rotate_right(0.4)
-        else:
-            self.rotate_left(0.4)
+        angle_to_rotate = get_angle_player_object(self, goal, self.angle)
+        distance = get_distance_player_object(self.position, goal)
+        locate_target(rospy, self, all_players, angle_to_rotate, None, distance, 'point')
