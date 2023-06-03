@@ -1,37 +1,44 @@
 #!/usr/bin/env python3
 
-from utils import get_angle_player_object, get_closer_player
+from utils import get_angle_player_object, get_closer_player, is_someone_in_between, get_new_point_in_rival_goal, get_distance_player_object
 from config import *
 
 
+def locate_target(rospy, player_to_action, all_players, target, ball_position=None, target_description = 'goal'):
 
-def locate_target(rospy, player_to_action, all_players, anglePlayerTarget, ball_position=None, distance_player_target = None, target = 'goal'):
+    output = None
+
     gap = 0.03
     if target == 'partner':
         gap = 0.15
 
-    if anglePlayerTarget < gap and anglePlayerTarget > -gap:
+    angle_player_target = get_angle_player_object(player_to_action, target, player_to_action.get_angle())
+    distance_player_target = get_distance_player_object(player_to_action.get_position(), target)
+
+    if angle_player_target < gap and angle_player_target > -gap:
         # estoy mirando al arco
         player_to_action.stop_rotate()
 
-        if target == 'goal':
-            go_rival_goal(rospy, player_to_action, all_players, ball_position)
-        elif target == 'partner':
+        if target_description == 'goal':
+            output = go_rival_goal(rospy, player_to_action, all_players, ball_position, target)
+        elif target_description == 'partner':
             pass_to_partner(player_to_action, distance_player_target)
-        elif target == 'ball':
+        elif target_description == 'ball':
             go_search_ball(rospy,player_to_action, all_players, distance_player_target)
-        elif target == 'point':
-            go_defined_point(rospy,player_to_action, all_players, distance_player_target)
+        elif target_description == 'point':
+            go_defined_point(player_to_action, all_players, distance_player_target)
             
 
 
-    elif (anglePlayerTarget>0 and anglePlayerTarget < 4) or anglePlayerTarget<-4:
+    elif (angle_player_target>0 and angle_player_target < 4) or angle_player_target<-4:
         player_to_action.rotate_right(0.30)
     else:
         player_to_action.rotate_left(0.30)
 
+    return output
 
-def avoid_crushing_player(rospy, player_to_action, all_players, velocity = 0.2):
+
+def avoid_crushing_player(player_to_action, all_players, velocity = 0.2):
     closer_player, distance_closer_player = get_closer_player(all_players, player_to_action)
     angle_player_closerPlayer = get_angle_player_object(player_to_action, closer_player.get_position(), player_to_action.get_angle())
 
@@ -45,9 +52,9 @@ def avoid_crushing_player(rospy, player_to_action, all_players, velocity = 0.2):
         player_to_action.stop_go_sideways()
         player_to_action.go_forward(velocity)
 
-def go_rival_goal(rospy, player_to_action, all_players, ball_position):
+def go_rival_goal(rospy, player_to_action, all_players, ball_position, target):
 
-    avoid_crushing_player(rospy,player_to_action, all_players)
+    avoid_crushing_player(player_to_action, all_players)
 
     if player_to_action.get_team() == 'yellow':
 
@@ -55,18 +62,36 @@ def go_rival_goal(rospy, player_to_action, all_players, ball_position):
         player_to_action.get_position()['y'] >= BLUE_SMALL_AREA_Y_MIN and player_to_action.get_position()['y'] <= BLUE_SMALL_AREA_Y_MAX):
 
             # estamos dentro del area rival
-            player_to_action.stop_dribbling()
-            player_to_action.kick_ball(3.0)    # pateo
-            player_to_action.lost_the_ball()
+
+            if is_someone_in_between(player_to_action, target, all_players):
+                # hay alguien en el medio, debo cambiar de target dentro del arco
+                player_to_action.stop_go()
+                new_rival_goal = get_new_point_in_rival_goal(target)
+                rospy.loginfo('aca cambio el punto del arco')
+                return new_rival_goal
+            else:
+                player_to_action.stop_go()
+                player_to_action.stop_dribbling()
+                player_to_action.kick_ball(3.0)    # pateo
+                player_to_action.lost_the_ball()
     
     else:
         if (player_to_action.get_position()['x'] >= YELLOW_SMALL_AREA_X_MIN and player_to_action.get_position()['x'] <= YELLOW_SMALL_AREA_X_MAX and
         player_to_action.get_position()['y'] >= YELLOW_SMALL_AREA_Y_MIN and player_to_action.get_position()['y'] <= YELLOW_SMALL_AREA_Y_MAX):
 
             # estamos dentro del area rival
-            player_to_action.stop_dribbling()
-            player_to_action.kick_ball(3.0)    # pateo
-            player_to_action.lost_the_ball()
+
+            if is_someone_in_between(player_to_action, target, all_players):
+                # hay alguien en el medio, debo cambiar de target dentro del arco
+                player_to_action.stop_go()
+                new_rival_goal = get_new_point_in_rival_goal(target)
+                rospy.loginfo('aca cambio el punto del arco')
+                return new_rival_goal
+            else:
+                player_to_action.stop_go()
+                player_to_action.stop_dribbling()
+                player_to_action.kick_ball(3.0)    # pateo
+                player_to_action.lost_the_ball()
 
     if not player_to_action.ball_is_in_area(ball_position, reaching_limit_area):
         # estoy al limite de mi area, le doy la pelota a un companero
@@ -92,11 +117,11 @@ def go_search_ball(rospy, player_to_action, all_players, distance_player_ball):
     else:
         # si estoy lejos de la pelota, voy hacia adelante porque ya estoy posicionado
         # aca tenemos que chequear que no nos choquemos con otro jugador
-        avoid_crushing_player(rospy,player_to_action, all_players)
+        avoid_crushing_player(player_to_action, all_players)
 
-def go_defined_point(rospy, player_to_action, all_players, distance_player_point):
+def go_defined_point(player_to_action, all_players, distance_player_point):
     if distance_player_point < 105:
         # estoy en posicion
         player_to_action.stop_go()
     else:
-        avoid_crushing_player(rospy,player_to_action, all_players, 0.4)
+        avoid_crushing_player(player_to_action, all_players, 0.4)

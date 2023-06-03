@@ -1,10 +1,7 @@
 from grsim_ros_bridge_msgs.msg import SSL
 from config import *
-from utils import get_angle_player_object, get_closer_player, get_distance_player_object
 from actions import locate_target
 
-safe_distance_rival_player = 225
-velocity_sideways = 0.1
 
 class Player:
     def __init__(self, team, role):
@@ -19,8 +16,6 @@ class Player:
         self.go_goal = True
 
     def rotate_right(self, velocity):
-        # if self.team == 'yellow':
-        #     velocity = -velocity
         if self.publisher is not None:
             self.msg.cmd_vel.angular.z = velocity
             self.publisher.publish(self.msg)
@@ -28,8 +23,6 @@ class Player:
             print('Publisher not configured')
 
     def rotate_left(self, velocity):
-        # if self.team == 'yellow':
-        #     velocity = -velocity
         if self.publisher is not None:
             self.msg.cmd_vel.angular.z = -velocity
             self.publisher.publish(self.msg)
@@ -233,12 +226,11 @@ class Player:
             else:
                 goal = {'x':YELLOW_GOALKEEPER_DEFENDING_POSITION_X, 'y':YELLOW_GOALKEEPER_DEFENDING_POSITION_Y}
 
-        angle_to_rotate = get_angle_player_object(self, goal, self.angle)
-        distance = get_distance_player_object(self.position, goal)
-        locate_target(rospy, self, all_players, angle_to_rotate, None, distance, 'point')
+
+        locate_target(rospy, self, all_players, goal, None, 'point')
 
 
-    def go_atack(self, all_players,rospy):
+    def go_attack(self, all_players,rospy):
         # blue players
         if (self.team == 'blue'):
             if (self.role == 'lateral_right'):
@@ -265,6 +257,4 @@ class Player:
             else:
                 goal = {'x':YELLOW_GOALKEEPER_ATACKING_POSITION_X, 'y':YELLOW_GOALKEEPER_ATACKING_POSITION_Y}
 
-        angle_to_rotate = get_angle_player_object(self, goal, self.angle)
-        distance = get_distance_player_object(self.position, goal)
-        locate_target(rospy, self, all_players, angle_to_rotate, None, distance, 'point')
+        locate_target(rospy, self, all_players, goal, None, 'point')

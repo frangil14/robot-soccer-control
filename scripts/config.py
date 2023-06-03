@@ -21,8 +21,6 @@ YELLOW_SMALL_AREA_X_MIN = 1000
 YELLOW_SMALL_AREA_Y_MAX = 1000
 YELLOW_SMALL_AREA_Y_MIN = -1000
 
-YELLOW_GOAL = {'x':2000, 'y':-300}
-BLUE_GOAL = {'x':-2000, 'y':-300}
 
 
 # ------ areas ------

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import rospy
-from std_msgs.msg import String
 from krssg_ssl_msgs.msg import SSL_DetectionFrame
 from grsim_ros_bridge_msgs.msg import SSL
-from utils import get_angle_player_object, they_have_the_ball, get_active_player, ball_player_min_distance, get_closer_player, get_closer_partner
+from utils import get_angle_player_object, they_have_the_ball, get_active_player, get_closer_partner, is_someone_in_between
 from player import Player
-from config import YELLOW_GOAL, YELLOW_SMALL_AREA_X_MAX, YELLOW_SMALL_AREA_X_MIN, YELLOW_SMALL_AREA_Y_MIN, YELLOW_SMALL_AREA_Y_MAX
+from config import FIELD_X_MAX
 from actions import locate_target
+
 
 # we are the blue team
 our_goalkeeper = Player('blue', 'goalkeeper')
@@ -29,7 +29,8 @@ rival_players = [rival_lateral_left, rival_central_defender, rival_lateral_right
 # ball 
 ball_position = {'x':0, 'y':0}
 all_players = players + rival_players
-RIVAL_GOAL = YELLOW_GOAL
+
+rival_goal = {'x':FIELD_X_MAX, 'y':0}
 
 
 def we_have_the_ball(players, distance_player_ball):
@@ -142,23 +143,31 @@ if __name__ == '__main__':
 
 
         player_to_action.activate_player()
-        angle_torotate_toget_ball = get_angle_player_object(player_to_action, ball_position, player_to_action.get_angle())
-        angle_torotate_rival_goal = get_angle_player_object(player_to_action, RIVAL_GOAL, player_to_action.get_angle())
 
-        rospy.loginfo('BLUE active player ' + str(player_to_action.get_role()))
+        partner_player = get_closer_partner(players, player_to_action)
+
+        rospy.loginfo('ACTIVE player ' + str(player_to_action.get_role()))
+        rospy.loginfo('closer player ' + str(partner_player.get_role()))
+        rospy.loginfo('is_someone_in_between ' + str(is_someone_in_between(player_to_action, rival_goal, all_players)))
+        rospy.loginfo('rival goal ' + str(rival_goal))
+        rospy.loginfo('ball location ' + str(ball_position))
+
 
         # la primera data que tira la camara esta equivocada
+        angle_torotate_toget_ball = get_angle_player_object(player_to_action, ball_position, player_to_action.get_angle())
         if angle_torotate_toget_ball == 0 and distance_player_ball == 0 and ball_position['x'] == 0 and ball_position['y'] == 0:
             pass
-        else:
 
+        else:
             # aca empieza la logica para activar los jugadores
 
             if we_have_the_ball(players, distance_player_ball):
                 rospy.loginfo('BLUE has the ball')
+
                 for player in players:
                     if not player.is_active():
-                        player.go_atack(all_players,rospy)
+                        player.go_attack(all_players,rospy)
+
                 # nosotros tenemos la pelota
                 # tengo que acomodarme para mirar al arco, o para darle la pelota a mi companero
 
@@ -166,15 +175,17 @@ if __name__ == '__main__':
                     # estoy yendo al arco
                     rospy.loginfo('BLUE esta yendo al arco')
 
-                    locate_target(rospy,player_to_action, all_players, angle_torotate_rival_goal, ball_position)
+                    output = locate_target(rospy,player_to_action, all_players, rival_goal, ball_position)
+
+                    if output is not None:
+                        rival_goal = output
                 
                 else:
                     # no estoy yendo al arco, estoy buscando a mi companero
                     rospy.loginfo('BLUE busco mi companero')
-                    partner_player, distance_partner_player = get_closer_partner(players, player_to_action)
+                    partner_player = get_closer_partner(players, player_to_action)
 
-                    angle_torotate_partner_player = get_angle_player_object(player_to_action, partner_player.get_position(), player_to_action.get_angle())
-                    locate_target(rospy,player_to_action, all_players, angle_torotate_partner_player, None, distance_partner_player, 'partner')
+                    locate_target(rospy,player_to_action, all_players, partner_player.get_position(), None, 'partner')
 
             elif they_have_the_ball(all_players, ball_position, 130, player_to_action.get_team()):
                 for player in players:
@@ -182,7 +193,7 @@ if __name__ == '__main__':
 
             else:
                 rospy.loginfo('la pelota esta libre')
-                locate_target(rospy,player_to_action, all_players, angle_torotate_toget_ball, None, distance_player_ball, 'ball')
+                locate_target(rospy,player_to_action, all_players, ball_position, None, 'ball')
 
 
 
